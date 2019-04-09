@@ -1,5 +1,7 @@
 package com.frankliu.easytransferapp.utils;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -19,7 +21,8 @@ public class Util {
 	
 	public static int byteArrayToInt(byte[] b) {
 		if(b.length != 4) {
-			Log.log(TAG, LogLevel.ERROR, "byte array turn to INT length must be 4");
+
+			Log.e(TAG,  "byte array turn to INT length must be 4");
 			return -1;
 		}
         int intValue = 0;
