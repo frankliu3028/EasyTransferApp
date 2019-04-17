@@ -37,4 +37,5 @@ dependencies {
     implementation group: 'io.netty', name: 'netty-all', version: '4.1.34.Final'
     implementation 'com.jakewharton:butterknife:10.1.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
+    implementation 'androidx.viewpager:viewpager:1.0.0'
 }
