@@ -2,6 +2,8 @@ package com.frankliu.easytransferapp.activity;
 
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+
+import com.frankliu.easytransferapp.fragment.DeviceFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -75,7 +77,16 @@ public class MainActivity extends AppCompatActivity {
         FragmentPagerAdapter adapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
-                return new Fragment();
+                Fragment fragment = null;
+                switch (position){
+                    case 0:
+                        fragment = new DeviceFragment();
+                        break;
+                        default:
+                            fragment = new Fragment();
+                            break;
+                }
+                return fragment;
             }
 
             @Override
