@@ -45,7 +45,7 @@ public class SDClient extends Thread{
             byte[] buffer=new byte[1024];
             DatagramPacket recPacket=new DatagramPacket(buffer,buffer.length);
             socket.setSoTimeout(1000);
-            List<DeviceInfo> resList = new ArrayList<>();
+            ArrayList<DeviceInfo> resList = new ArrayList<>();
             while(isRunning) {
                 if(!receiving)break;
                 try {

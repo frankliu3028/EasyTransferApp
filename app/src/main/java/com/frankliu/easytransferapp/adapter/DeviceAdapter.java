@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.frankliu.easytransferapp.R;
+import com.frankliu.easytransferapp.entity.DeviceInfo;
 
 import java.util.ArrayList;
 
@@ -16,10 +17,15 @@ import butterknife.ButterKnife;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
 
-    private ArrayList<String> mData;
+    private ArrayList<DeviceInfo> mData;
 
-    public DeviceAdapter(ArrayList<String> mData){
+    public DeviceAdapter(ArrayList<DeviceInfo> mData){
         this.mData = mData;
+    }
+
+    public void updateData(ArrayList<DeviceInfo> mData){
+        this.mData = mData;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -32,7 +38,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.tvDeviceName.setText(mData.get(position));
+        DeviceInfo deviceInfo = mData.get(position);
+        holder.tvDeviceName.setText(deviceInfo.getHostname());
+        holder.tvDeviceIp.setText(deviceInfo.getIp());
+        holder.tvDevicePort.setText(String.valueOf(deviceInfo.getPort()));
     }
 
     @Override
@@ -42,8 +51,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.tv_device_name)
-        TextView tvDeviceName;
+        @BindView(R.id.tv_device_name) TextView tvDeviceName;
+        @BindView(R.id.tv_device_ip) TextView tvDeviceIp;
+        @BindView(R.id.tv_device_port) TextView tvDevicePort;
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
