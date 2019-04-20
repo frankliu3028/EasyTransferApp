@@ -150,4 +150,16 @@ public class Util {
 		return -1;
 	}
 
+	public static String intIp2string(int ip) {
+		StringBuilder sb=new StringBuilder();
+		int b=ip & 0xff;
+		sb.append(b+".");
+		b=(ip>>8)&0xff;
+		sb.append(b+".");
+		b=(ip>>16)&0xff;
+		sb.append(b+".");
+		b=(ip>>24)&0xff;
+		sb.append(b);
+		return sb.toString();
+	}
 }

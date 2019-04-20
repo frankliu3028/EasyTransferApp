@@ -22,13 +22,15 @@ public class SDServer extends Thread{
     private String TAG = SDServer.class.getSimpleName();
     private MulticastSocket socket;
     private SDServerCallback callback;
+    private String ip;
     private boolean isRunning = true;
 
-    public SDServer(SDServerCallback callback){
+    public SDServer(String ip, SDServerCallback callback){
         if(callback == null){
             Log.e(TAG, "SDServerCallback can not be null");
         }
         this.callback = callback;
+        this.ip = ip;
     }
 
     @Override
@@ -39,9 +41,8 @@ public class SDServer extends Thread{
             return;
         }
         try{
-            InetAddress inetAddress = InetAddress.getByName(Util.getLocalIpAddress());
-            InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, Config.SERVICE_DISCOVER_LISTEN_PORT);
-            socket = new MulticastSocket(inetSocketAddress);
+            //InetSocketAddress inetSocketAddress = new InetSocketAddress(InetAddress.getByName(ip), Config.SERVICE_DISCOVER_LISTEN_PORT);
+            socket = new MulticastSocket(Config.SERVICE_DISCOVER_LISTEN_PORT);
             InetAddress multicastInetAddress = InetAddress.getByName(Config.multicastAddress);
             socket.joinGroup(multicastInetAddress);
             byte[] buffer = new byte[1024];
@@ -82,6 +83,7 @@ public class SDServer extends Thread{
     }
 
     public void close(){
+        Log.d(TAG, "close111111111111111111111111111");
         if(socket != null){
             isRunning = false;
             socket.close();

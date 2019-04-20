@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.frankliu.easytransferapp"
-        minSdkVersion 15
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -40,4 +40,6 @@ dependencies {
     implementation 'androidx.viewpager:viewpager:1.0.0'
     implementation "io.reactivex.rxjava2:rxjava:2.2.8"
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'com.droidninja:filepicker:2.2.1'
+    implementation 'com.mapzen:on-the-road:0.8.1'
 }

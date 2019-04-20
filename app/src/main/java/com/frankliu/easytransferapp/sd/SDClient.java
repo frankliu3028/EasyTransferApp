@@ -24,7 +24,7 @@ public class SDClient extends Thread{
 
     private boolean isRunning = true;
     private boolean receiving = true;
-    private int receivingTime = 5*1000;
+    private int receivingTime = 2*1000;
 
     public SDClient(SDClientCallback callback){
         this.callback = callback;
@@ -58,7 +58,7 @@ public class SDClient extends Thread{
                 BasicProtocol recProtocol = UtilProtocol.readFromBytes(recPacket.getData());
                 byte[] recData = recProtocol.getDataArray();
                 int port= Util.bytes2Int(recData, 0);
-                byte[] hostnameBytes = Arrays.copyOfRange(recData, 4, recData.length);
+                byte[] hostnameBytes = Arrays.copyOfRange(recData, 4, recProtocol.getLength() - 7);
                 String hostname = new String(hostnameBytes, 0, hostnameBytes.length);
                 resList.add(new DeviceInfo(recPacket.getAddress().getHostAddress(), port, hostname));
             }

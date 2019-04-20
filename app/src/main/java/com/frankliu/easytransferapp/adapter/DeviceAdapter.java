@@ -18,6 +18,7 @@ import butterknife.ButterKnife;
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
 
     private ArrayList<DeviceInfo> mData;
+    private OnItemClickListener onItemClickListener;
 
     public DeviceAdapter(ArrayList<DeviceInfo> mData){
         this.mData = mData;
@@ -42,6 +43,21 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         holder.tvDeviceName.setText(deviceInfo.getHostname());
         holder.tvDeviceIp.setText(deviceInfo.getIp());
         holder.tvDevicePort.setText(String.valueOf(deviceInfo.getPort()));
+        if(onItemClickListener != null){
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onItemClickListener.onItemClick(position);
+                }
+            });
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    onItemClickListener.onItemLongClick(position);
+                    return false;
+                }
+            });
+        }
     }
 
     @Override
@@ -58,5 +74,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             super(itemView);
             ButterKnife.bind(this, itemView);
         }
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener){
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    public interface OnItemClickListener{
+        void onItemClick(int position);
+        void onItemLongClick(int position);
     }
 }

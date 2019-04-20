@@ -1,6 +1,8 @@
 package com.frankliu.easytransferapp.protocol;
 
 
+import android.os.Build;
+
 import com.frankliu.easytransferapp.utils.Config;
 import com.frankliu.easytransferapp.utils.Util;
 
@@ -39,7 +41,7 @@ public class ProtocolFactory {
             basicProtocol.setErrorCode(ErrorCode.SUCCESS);
             basicProtocol.setMsgId(MsgId.SERVICE_DISCOVER_RESPONSE);
             basicProtocol.setDataFormat(DataFormat.CUSTOM);
-            String hostname = Util.getLocalHostname();
+            String hostname = Build.MODEL;
             ByteBuffer byteBuffer = ByteBuffer.allocate(4 + hostname.getBytes().length);
             byteBuffer.put(Util.int2ByteArrays(Config.FILE_TRANSFER_SERVICE_LISTEN_PORT));
             byteBuffer.put(hostname.getBytes());

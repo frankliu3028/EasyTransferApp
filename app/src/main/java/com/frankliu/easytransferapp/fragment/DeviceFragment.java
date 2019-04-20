@@ -1,8 +1,13 @@
 package com.frankliu.easytransferapp.fragment;
 
-import android.app.ProgressDialog;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +26,6 @@ import com.frankliu.easytransferapp.sd.SDServerCallback;
 import com.frankliu.easytransferapp.utils.Util;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,13 +37,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import droidninja.filepicker.FilePickerBuilder;
+import droidninja.filepicker.FilePickerConst;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class DeviceFragment extends Fragment {
 
@@ -80,6 +85,7 @@ public class DeviceFragment extends Fragment {
                         public void onNext(ArrayList<DeviceInfo> deviceInfos) {
                             deviceAdapter.updateData(deviceInfos);
                             swipeRefreshLayout.setRefreshing(false);
+                            Toast.makeText(getActivity(), "刷新成功", Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -105,16 +111,23 @@ public class DeviceFragment extends Fragment {
         deviceAdapter = new DeviceAdapter(null);
         rvDevice.setAdapter(deviceAdapter);
         rvDevice.setItemAnimator(new DefaultItemAnimator());
-        rvDevice.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
+        rvDevice.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
         swipeRefreshLayout.setOnRefreshListener(onRefreshListener);
-        sdServer = new SDServer(new SDServerCallback() {
+        if(!isWifiConnected()){
+            Log.e(TAG, "wifi is not connected");
+            return null;
+        }
+        String wifiIp = getWifiIpAddress();
+        Toast.makeText(getActivity(), "ip" + wifiIp, Toast.LENGTH_SHORT).show();
+        sdServer = new SDServer(wifiIp, new SDServerCallback() {
             @Override
             public void serviceStartResults(int errorCode) {
                 if(ErrorCode.SD_START_ERROR_PORT_USED == errorCode){
                     Log.e(TAG, "service discover listening port is used!");
                     //Toast.makeText(getActivity(), "invalid port", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                }else if(ErrorCode.FAILURE == errorCode){
+                    Log.e(TAG, "start SD Service Failure");
+                }else{
                     //Toast.makeText(getActivity(), "SD service start", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "SD Service Start");
                 }
@@ -122,40 +135,77 @@ public class DeviceFragment extends Fragment {
         });
         sdServer.start();
         getMyHostname();
+
+        deviceAdapter.setOnItemClickListener(new DeviceAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                FilePickerBuilder.getInstance().setMaxCount(10)
+                        .setActivityTheme(R.style.LibAppTheme)
+                        .addFileSupport("video",new String[]{"mkv"})
+                        .pickFile(DeviceFragment.this);
+            }
+
+            @Override
+            public void onItemLongClick(int position) {
+
+            }
+        });
         return rootView;
     }
 
-    private void getMyHostname(){
-        Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
-                String myHostname = Util.getLocalHostname();
-                emitter.onNext(myHostname);
+    private String getWifiIpAddress(){
+        Context context = getActivity().getApplicationContext();
+        if(context == null){
+            Log.e(TAG, "context is null");
+            return null;
+        }
+        WifiManager wm = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+        if(isWifiConnected()){
+            int ipAsInt = wm.getConnectionInfo().getIpAddress();
+            if(ipAsInt == 0){
+                return null;
+            }else{
+                String ipStr = Util.intIp2string(ipAsInt);
+                return ipStr;
             }
-        }).subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<String>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+        }
+        return null;
+    }
 
-                    }
+    private boolean isWifiConnected(){
+        Context context = getActivity().getApplicationContext();
+        if(context == null){
+            Log.e(TAG, "context is null");
+            return false;
+        }
+        WifiManager wm = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+        if(wm.getWifiState() == WifiManager.WIFI_STATE_ENABLED){
+            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            boolean isConnected = wifiInfo.isConnected();
+            return isConnected;
+        }
+        return false;
+    }
 
-                    @Override
-                    public void onNext(String s) {
-                        tvMyHostname.setText("my_hostname:" + s);
-                    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode)
+        {
+            case FilePickerConst.REQUEST_CODE_DOC:
+                if(resultCode== Activity.RESULT_OK && data!=null)
+                {
+                    //docPaths = new ArrayList<>();
+                    //docPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+                }
+                break;
+        }
+    }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                        Toast.makeText(getActivity(), "error", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
+    private void getMyHostname(){
+        String deivceId = Build.MODEL;
+        Log.d(TAG, "model:" + deivceId);
+        tvMyHostname.setText(deivceId);
     }
 
     @Override
