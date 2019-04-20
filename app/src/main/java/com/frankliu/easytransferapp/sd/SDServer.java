@@ -22,7 +22,7 @@ public class SDServer extends Thread{
     private String TAG = SDServer.class.getSimpleName();
     private MulticastSocket socket;
     private SDServerCallback callback;
-    public static boolean isRunning = true;
+    private boolean isRunning = true;
 
     public SDServer(SDServerCallback callback){
         if(callback == null){
@@ -46,12 +46,14 @@ public class SDServer extends Thread{
             socket.joinGroup(multicastInetAddress);
             byte[] buffer = new byte[1024];
             DatagramPacket recPacket = new DatagramPacket(buffer, buffer.length);
+            callback.serviceStartResults(ErrorCode.SUCCESS);
             while(isRunning){
                 socket.receive(recPacket);
                 handlePacketReceived(recPacket);
             }
         }catch (IOException e){
             e.printStackTrace();
+            callback.serviceStartResults(ErrorCode.FAILURE);
         }
 
     }
@@ -77,5 +79,12 @@ public class SDServer extends Thread{
             e.printStackTrace();
         }
 
+    }
+
+    public void close(){
+        if(socket != null){
+            isRunning = false;
+            socket.close();
+        }
     }
 }

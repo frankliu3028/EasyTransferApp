@@ -7,13 +7,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.frankliu.easytransferapp.R;
 import com.frankliu.easytransferapp.adapter.DeviceAdapter;
 import com.frankliu.easytransferapp.entity.DeviceInfo;
+import com.frankliu.easytransferapp.protocol.ErrorCode;
 import com.frankliu.easytransferapp.sd.SDClient;
 import com.frankliu.easytransferapp.sd.SDClientCallback;
+import com.frankliu.easytransferapp.sd.SDServer;
+import com.frankliu.easytransferapp.sd.SDServerCallback;
+import com.frankliu.easytransferapp.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +39,6 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class DeviceFragment extends Fragment {
@@ -44,8 +48,11 @@ public class DeviceFragment extends Fragment {
     @BindView(R.id.rv_device) RecyclerView rvDevice;
     @BindView(R.id.swipe_refresh_layout)
     SwipeRefreshLayout swipeRefreshLayout;
+    @BindView(R.id.tv_my_hostname)
+    TextView tvMyHostname;
 
     private DeviceAdapter deviceAdapter;
+    private SDServer sdServer;
 
     private SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
@@ -100,9 +107,62 @@ public class DeviceFragment extends Fragment {
         rvDevice.setItemAnimator(new DefaultItemAnimator());
         rvDevice.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
         swipeRefreshLayout.setOnRefreshListener(onRefreshListener);
+        sdServer = new SDServer(new SDServerCallback() {
+            @Override
+            public void serviceStartResults(int errorCode) {
+                if(ErrorCode.SD_START_ERROR_PORT_USED == errorCode){
+                    Log.e(TAG, "service discover listening port is used!");
+                    //Toast.makeText(getActivity(), "invalid port", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    //Toast.makeText(getActivity(), "SD service start", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "SD Service Start");
+                }
+            }
+        });
+        sdServer.start();
+        getMyHostname();
         return rootView;
     }
 
+    private void getMyHostname(){
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                String myHostname = Util.getLocalHostname();
+                emitter.onNext(myHostname);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
+                    }
 
+                    @Override
+                    public void onNext(String s) {
+                        tvMyHostname.setText("my_hostname:" + s);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Toast.makeText(getActivity(), "error", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(sdServer != null && sdServer.isAlive()){
+            sdServer.close();
+        }
+    }
 }
