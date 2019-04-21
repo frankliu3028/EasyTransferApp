@@ -25,6 +25,7 @@ import com.frankliu.easytransferapp.sd.SDServer;
 import com.frankliu.easytransferapp.sd.SDServerCallback;
 import com.frankliu.easytransferapp.utils.Util;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -141,7 +142,7 @@ public class DeviceFragment extends Fragment {
             public void onItemClick(int position) {
                 FilePickerBuilder.getInstance().setMaxCount(10)
                         .setActivityTheme(R.style.LibAppTheme)
-                        .addFileSupport("video",new String[]{"mkv"})
+                        .enableVideoPicker(true)
                         .pickFile(DeviceFragment.this);
             }
 
@@ -195,8 +196,10 @@ public class DeviceFragment extends Fragment {
             case FilePickerConst.REQUEST_CODE_DOC:
                 if(resultCode== Activity.RESULT_OK && data!=null)
                 {
-                    //docPaths = new ArrayList<>();
-                    //docPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+                    ArrayList<String> docPaths = data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS);
+                    for(String s:docPaths){
+                        System.out.println("choose:" + s);
+                    }
                 }
                 break;
         }

@@ -4,6 +4,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 
 import com.frankliu.easytransferapp.fragment.DeviceFragment;
+import com.frankliu.easytransferapp.utils.Config;
+import com.frankliu.easytransferapp.utils.Util;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         viewPager.setAdapter(adapter);
+        Config.fileSaveDir = getFilesDir().getAbsolutePath();
     }
 
 }
