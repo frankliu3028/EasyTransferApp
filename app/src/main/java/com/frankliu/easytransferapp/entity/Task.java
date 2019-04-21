@@ -7,6 +7,8 @@ public class Task {
     private int taskId;
     protected int taskType;
     private int progress;
+    private String peerip;
+    private String peerDeviceName;
 
     public Task(){
 
@@ -30,5 +32,21 @@ public class Task {
 
     public void setProgress(int progress) {
         this.progress = progress;
+    }
+
+    public String getPeerip() {
+        return peerip;
+    }
+
+    public void setPeerip(String peerip) {
+        this.peerip = peerip;
+    }
+
+    public String getPeerDeviceName() {
+        return peerDeviceName;
+    }
+
+    public void setPeerDeviceName(String peerDeviceName) {
+        this.peerDeviceName = peerDeviceName;
     }
 }

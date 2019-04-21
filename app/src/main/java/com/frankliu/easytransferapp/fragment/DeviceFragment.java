@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.frankliu.easytransferapp.R;
 import com.frankliu.easytransferapp.adapter.DeviceAdapter;
+import com.frankliu.easytransferapp.adapter.OnItemClickListener;
 import com.frankliu.easytransferapp.entity.DeviceInfo;
 import com.frankliu.easytransferapp.protocol.ErrorCode;
 import com.frankliu.easytransferapp.sd.SDClient;
@@ -137,7 +138,7 @@ public class DeviceFragment extends Fragment {
         sdServer.start();
         getMyHostname();
 
-        deviceAdapter.setOnItemClickListener(new DeviceAdapter.OnItemClickListener() {
+        deviceAdapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
                 FilePickerBuilder.getInstance().setMaxCount(10)

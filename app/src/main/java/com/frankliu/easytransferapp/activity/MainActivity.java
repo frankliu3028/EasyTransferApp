@@ -1,14 +1,24 @@
 package com.frankliu.easytransferapp.activity;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 
+import com.frankliu.easytransferapp.entity.TaskReceiveFile;
 import com.frankliu.easytransferapp.fragment.DeviceFragment;
+import com.frankliu.easytransferapp.fragment.TaskFragment;
+import com.frankliu.easytransferapp.network.Server;
+import com.frankliu.easytransferapp.network.ServerCallback;
+import com.frankliu.easytransferapp.service.TaskService;
 import com.frankliu.easytransferapp.utils.Config;
 import com.frankliu.easytransferapp.utils.Util;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.IBinder;
 import android.view.MenuItem;
 
 import com.frankliu.easytransferapp.R;
@@ -67,6 +77,22 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private TaskService.TaskBinder taskBinder;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            taskBinder = (TaskService.TaskBinder)service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    private Server server;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
                     case 0:
                         fragment = new DeviceFragment();
                         break;
+                    case 1:
+                        fragment = new TaskFragment();
+                        break;
                         default:
                             fragment = new Fragment();
                             break;
@@ -99,6 +128,26 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(adapter);
         Config.fileSaveDir = getFilesDir().getAbsolutePath();
+
+        Intent intent = new Intent(this, TaskService.class);
+        bindService(intent,serviceConnection, BIND_AUTO_CREATE);
+        startMyService();
     }
 
+    private void startMyService(){
+        server = new Server(Util.getAValidPort(), new ServerCallback() {
+            @Override
+            public void receiveFile(TaskReceiveFile taskReceiveFile) {
+                taskBinder.addTask(taskReceiveFile);
+            }
+        });
+        server.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(serviceConnection);
+        server.close();
+    }
 }

@@ -21,6 +21,7 @@ import com.frankliu.easytransferapp.utils.Constant;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,6 +39,8 @@ public class TaskService extends Service {
     private TaskCallback taskCallback;
     private Handler handler;
 
+    private ArrayList<Task> tasks;
+
     public class TaskBinder extends Binder{
         public void addTask(Task task){
             createTask(task);
@@ -48,6 +51,9 @@ public class TaskService extends Service {
         }
         public void setTaskCallback(TaskCallback taskCallback){
             TaskService.this.taskCallback = taskCallback;
+        }
+        public ArrayList<Task> getTasks(){
+            return tasks;
         }
     }
 
@@ -64,6 +70,7 @@ public class TaskService extends Service {
         executorService = Executors.newCachedThreadPool();
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         handler = new Handler();
+        tasks = new ArrayList<>();
     }
 
     @Override
@@ -111,6 +118,7 @@ public class TaskService extends Service {
             });
             executorService.execute(fileSender);
             taskCallback.taskReady(taskSendFile);
+            tasks.add(taskSendFile);
         }catch (UnknownHostException e){
             e.printStackTrace();
         }
@@ -127,6 +135,7 @@ public class TaskService extends Service {
                     @Override
                     public void run() {
                         taskCallback.taskReady(taskReceiveFile);
+                        tasks.add(taskReceiveFile);
                     }
                 });
             }

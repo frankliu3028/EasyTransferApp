@@ -17,11 +17,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.frankliu.easytransferapp.R;
+import com.frankliu.easytransferapp.adapter.TaskAdapter;
 import com.frankliu.easytransferapp.entity.Task;
 import com.frankliu.easytransferapp.service.TaskCallback;
 import com.frankliu.easytransferapp.service.TaskService;
 import com.frankliu.easytransferapp.utils.Constant;
+
+import java.util.ArrayList;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class TaskFragment extends Fragment {
 
@@ -56,6 +67,12 @@ public class TaskFragment extends Fragment {
         }
     };
 
+    @BindView(R.id.rv_task)
+    RecyclerView rvTask;
+
+    private ArrayList<Task> taskDatas;
+    private TaskAdapter taskAdapter;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +88,15 @@ public class TaskFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
+        View rootView = inflater.inflate(R.layout.fragment_task, container, false);
+        ButterKnife.bind(this, rootView);
+        rvTask.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rvTask.setItemAnimator(new DefaultItemAnimator());
+        rvTask.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+        taskDatas = taskBinder.getTasks();
+        taskAdapter = new TaskAdapter(taskDatas);
+        rvTask.setAdapter(taskAdapter);
+        return rootView;
     }
 
 
@@ -96,13 +121,19 @@ public class TaskFragment extends Fragment {
     }
 
     private void updateTaskProgress(int taskId, int progress){
-
+        int position = 0;
+        for(Task task:taskDatas){
+            if(task.getTaskId() == taskId){
+                taskAdapter.updateItemProgress(position, progress);
+                return;
+            }
+            position++;
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unbindService(serviceConnection);
         localBroadcastManager.unregisterReceiver(localBroadcastReceiver);
     }
 }
