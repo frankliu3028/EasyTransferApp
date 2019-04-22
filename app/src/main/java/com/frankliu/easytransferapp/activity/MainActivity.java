@@ -18,6 +18,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.MenuItem;
 
@@ -28,6 +29,13 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -93,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Server server;
 
+    private Handler handler = new Handler();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,13 +145,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMyService(){
-        server = new Server(Util.getAValidPort(), new ServerCallback() {
+        Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
-            public void receiveFile(TaskReceiveFile taskReceiveFile) {
-                taskBinder.addTask(taskReceiveFile);
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                int port = Util.getAValidPort();
+                emitter.onNext(port);
             }
-        });
-        server.start();
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Integer>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Integer port) {
+                        server = new Server(port, new ServerCallback() {
+                            @Override
+                            public void receiveFile(TaskReceiveFile taskReceiveFile) {
+                                taskBinder.addTask(taskReceiveFile);
+                            }
+                        });
+                        server.start();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     @Override

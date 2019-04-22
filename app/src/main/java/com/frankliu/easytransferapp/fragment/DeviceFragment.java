@@ -3,6 +3,7 @@ package com.frankliu.easytransferapp.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
@@ -25,8 +26,15 @@ import com.frankliu.easytransferapp.sd.SDClientCallback;
 import com.frankliu.easytransferapp.sd.SDServer;
 import com.frankliu.easytransferapp.sd.SDServerCallback;
 import com.frankliu.easytransferapp.utils.Util;
+import com.github.angads25.filepicker.controller.DialogSelectionListener;
+import com.github.angads25.filepicker.model.DialogConfigs;
+import com.github.angads25.filepicker.model.DialogProperties;
+import com.github.angads25.filepicker.view.FilePickerDialog;
+import com.vincent.filepicker.Constant;
+import com.vincent.filepicker.activity.AudioPickActivity;
+import com.vincent.filepicker.filter.entity.AudioFile;
 
-import java.lang.reflect.Array;
+import java.io.File;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -39,7 +47,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import droidninja.filepicker.FilePickerBuilder;
 import droidninja.filepicker.FilePickerConst;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -47,6 +54,8 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+
+import static com.vincent.filepicker.activity.AudioPickActivity.IS_NEED_RECORDER;
 
 public class DeviceFragment extends Fragment {
 
@@ -141,10 +150,7 @@ public class DeviceFragment extends Fragment {
         deviceAdapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                FilePickerBuilder.getInstance().setMaxCount(10)
-                        .setActivityTheme(R.style.LibAppTheme)
-                        .enableVideoPicker(true)
-                        .pickFile(DeviceFragment.this);
+                selectFile();
             }
 
             @Override
@@ -192,6 +198,7 @@ public class DeviceFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "11111111111111111111111");
         switch (requestCode)
         {
             case FilePickerConst.REQUEST_CODE_DOC:
@@ -203,6 +210,51 @@ public class DeviceFragment extends Fragment {
                     }
                 }
                 break;
+            case Constant.REQUEST_CODE_PICK_AUDIO:
+                if (resultCode == Activity.RESULT_OK) {
+                    ArrayList<AudioFile> list = data.getParcelableArrayListExtra(Constant.RESULT_PICK_AUDIO);
+                    Toast.makeText(getActivity(), "select:" + list.size(), Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+        }
+    }
+
+    private void selectFile(){
+        DialogProperties properties = new DialogProperties();
+        properties.selection_mode = DialogConfigs.SINGLE_MODE;
+        properties.selection_type = DialogConfigs.FILE_SELECT;
+        properties.root = new File(DialogConfigs.DEFAULT_DIR);
+        properties.error_dir = new File(DialogConfigs.DEFAULT_DIR);
+        properties.offset = new File(DialogConfigs.DEFAULT_DIR);
+        properties.extensions = null;
+        FilePickerDialog dialog = new FilePickerDialog(getActivity(),properties);
+        dialog.setTitle("Select a File");
+        dialog.setDialogSelectionListener(new DialogSelectionListener() {
+            @Override
+            public void onSelectedFilePaths(String[] files) {
+                //files is the array of the paths of files selected by the Application User.
+                Log.w(TAG, "select:" + files[0]);
+                Toast.makeText(getActivity(), "select:" + files.length, Toast.LENGTH_SHORT).show();
+            }
+        });
+        dialog.show();
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,@NonNull String permissions[],@NonNull int[] grantResults) {
+        switch (requestCode) {
+            case FilePickerDialog.EXTERNAL_READ_PERMISSION_GRANT: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    if(dialog!=null)
+//                    {   //Show dialog if the read permission has been granted.
+//                        dialog.show();
+//                    }
+                }
+                else {
+                    //Permission has not been granted. Notify the user.
+                    Toast.makeText(getActivity(),"Permission is Required for getting list of files",Toast.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 

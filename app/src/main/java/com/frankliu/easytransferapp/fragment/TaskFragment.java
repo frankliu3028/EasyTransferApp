@@ -93,8 +93,8 @@ public class TaskFragment extends Fragment {
         rvTask.setLayoutManager(new LinearLayoutManager(getActivity()));
         rvTask.setItemAnimator(new DefaultItemAnimator());
         rvTask.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-        taskDatas = taskBinder.getTasks();
-        taskAdapter = new TaskAdapter(taskDatas);
+        //taskDatas = taskBinder.getTasks();
+        taskAdapter = new TaskAdapter(null);
         rvTask.setAdapter(taskAdapter);
         return rootView;
     }
