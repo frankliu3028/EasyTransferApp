@@ -1,14 +1,18 @@
 package com.frankliu.easytransferapp.fragment;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,19 +24,20 @@ import com.frankliu.easytransferapp.R;
 import com.frankliu.easytransferapp.adapter.DeviceAdapter;
 import com.frankliu.easytransferapp.adapter.OnItemClickListener;
 import com.frankliu.easytransferapp.entity.DeviceInfo;
+import com.frankliu.easytransferapp.entity.TaskSendFile;
+import com.frankliu.easytransferapp.network.Client;
+import com.frankliu.easytransferapp.network.ClientCallback;
 import com.frankliu.easytransferapp.protocol.ErrorCode;
 import com.frankliu.easytransferapp.sd.SDClient;
 import com.frankliu.easytransferapp.sd.SDClientCallback;
 import com.frankliu.easytransferapp.sd.SDServer;
 import com.frankliu.easytransferapp.sd.SDServerCallback;
+import com.frankliu.easytransferapp.service.TaskService;
 import com.frankliu.easytransferapp.utils.Util;
 import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
-import com.vincent.filepicker.Constant;
-import com.vincent.filepicker.activity.AudioPickActivity;
-import com.vincent.filepicker.filter.entity.AudioFile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,15 +52,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import droidninja.filepicker.FilePickerConst;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-
-import static com.vincent.filepicker.activity.AudioPickActivity.IS_NEED_RECORDER;
+import io.reactivex.schedulers.Schedulers;
 
 public class DeviceFragment extends Fragment {
 
@@ -113,52 +116,135 @@ public class DeviceFragment extends Fragment {
         }
     };
 
+    private ProgressDialog progressDialog;
+    private DialogSelectionListener dialogSelectionListener = new DialogSelectionListener() {
+        @Override
+        public void onSelectedFilePaths(String[] files) {
+            if(files.length > 1){
+                Toast.makeText(getActivity(), "暂时只支持1个文件", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(currentSelectDevice == null){
+                Log.w(TAG,"current select device is null");
+                return;
+            }
+            Observable.create(new ObservableOnSubscribe<TaskSendFile>() {
+                @Override
+                public void subscribe(ObservableEmitter<TaskSendFile> emitter) throws Exception {
+                    Client client = new Client(currentSelectDevice, new File(files[0]), new ClientCallback() {
+                        @Override
+                        public void startSendFile(TaskSendFile taskSendFile) {
+                            emitter.onNext(taskSendFile);
+                        }
+                    });
+                    client.start();
+                }
+            }).subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<TaskSendFile>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            getProgressDialog().show();
+                        }
+
+                        @Override
+                        public void onNext(TaskSendFile taskSendFile) {
+                            Log.w(TAG, "onNext,taskSendFile:" + taskSendFile);
+                            taskBinder.addTask(taskSendFile);
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            e.printStackTrace();
+                            getProgressDialog().cancel();
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            getProgressDialog().cancel();
+                        }
+                    });
+        }
+    };
+
+    private DeviceInfo currentSelectDevice;
+    private OnItemClickListener onItemClickListener = new OnItemClickListener() {
+        @Override
+        public void onItemClick(int position) {
+            currentSelectDevice = deviceAdapter.getData().get(position);
+            selectFile();
+        }
+
+        @Override
+        public void onItemLongClick(int position) {
+
+        }
+    };
+
+    private TaskService.TaskBinder taskBinder;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            taskBinder = (TaskService.TaskBinder)service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent intent = new Intent(getActivity(), TaskService.class);
+        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        if(!isWifiConnected()){
+            Log.e(TAG, "wifi is not connected");
+            return;
+        }
+        String wifiIp = getWifiIpAddress();
+        sdServer = new SDServer(wifiIp, new SDServerCallback() {
+            @Override
+            public void serviceStartResults(int errorCode) {
+                if(ErrorCode.SD_START_ERROR_PORT_USED == errorCode){
+                    Log.e(TAG, "service discover listening port is used!");
+                }else if(ErrorCode.FAILURE == errorCode){
+                    Log.e(TAG, "start SD Service Failure");
+                }else{
+                    Log.d(TAG, "SD Service Start");
+                }
+            }
+        });
+        sdServer.start();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_device, container, false);
         ButterKnife.bind(this, rootView);
         rvDevice.setLayoutManager(new LinearLayoutManager(getActivity()));
-        deviceAdapter = new DeviceAdapter(null);
+        if(deviceAdapter == null){
+            deviceAdapter = new DeviceAdapter(null);
+        }
         rvDevice.setAdapter(deviceAdapter);
         rvDevice.setItemAnimator(new DefaultItemAnimator());
         rvDevice.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
         swipeRefreshLayout.setOnRefreshListener(onRefreshListener);
-        if(!isWifiConnected()){
-            Log.e(TAG, "wifi is not connected");
-            return null;
-        }
-        String wifiIp = getWifiIpAddress();
-        Toast.makeText(getActivity(), "ip" + wifiIp, Toast.LENGTH_SHORT).show();
-        sdServer = new SDServer(wifiIp, new SDServerCallback() {
-            @Override
-            public void serviceStartResults(int errorCode) {
-                if(ErrorCode.SD_START_ERROR_PORT_USED == errorCode){
-                    Log.e(TAG, "service discover listening port is used!");
-                    //Toast.makeText(getActivity(), "invalid port", Toast.LENGTH_SHORT).show();
-                }else if(ErrorCode.FAILURE == errorCode){
-                    Log.e(TAG, "start SD Service Failure");
-                }else{
-                    //Toast.makeText(getActivity(), "SD service start", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "SD Service Start");
-                }
-            }
-        });
-        sdServer.start();
         getMyHostname();
 
-        deviceAdapter.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                selectFile();
-            }
-
-            @Override
-            public void onItemLongClick(int position) {
-
-            }
-        });
+        deviceAdapter.setOnItemClickListener(onItemClickListener);
         return rootView;
+    }
+
+    private ProgressDialog getProgressDialog(){
+        if(progressDialog == null){
+            progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setMessage("please wait...");
+        }
+        return progressDialog;
     }
 
     private String getWifiIpAddress(){
@@ -196,30 +282,6 @@ public class DeviceFragment extends Fragment {
         return false;
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "11111111111111111111111");
-        switch (requestCode)
-        {
-            case FilePickerConst.REQUEST_CODE_DOC:
-                if(resultCode== Activity.RESULT_OK && data!=null)
-                {
-                    ArrayList<String> docPaths = data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS);
-                    for(String s:docPaths){
-                        System.out.println("choose:" + s);
-                    }
-                }
-                break;
-            case Constant.REQUEST_CODE_PICK_AUDIO:
-                if (resultCode == Activity.RESULT_OK) {
-                    ArrayList<AudioFile> list = data.getParcelableArrayListExtra(Constant.RESULT_PICK_AUDIO);
-                    Toast.makeText(getActivity(), "select:" + list.size(), Toast.LENGTH_SHORT).show();
-                }
-                break;
-
-        }
-    }
-
     private void selectFile(){
         DialogProperties properties = new DialogProperties();
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
@@ -230,14 +292,7 @@ public class DeviceFragment extends Fragment {
         properties.extensions = null;
         FilePickerDialog dialog = new FilePickerDialog(getActivity(),properties);
         dialog.setTitle("Select a File");
-        dialog.setDialogSelectionListener(new DialogSelectionListener() {
-            @Override
-            public void onSelectedFilePaths(String[] files) {
-                //files is the array of the paths of files selected by the Application User.
-                Log.w(TAG, "select:" + files[0]);
-                Toast.makeText(getActivity(), "select:" + files.length, Toast.LENGTH_SHORT).show();
-            }
-        });
+        dialog.setDialogSelectionListener(dialogSelectionListener);
         dialog.show();
     }
     @Override

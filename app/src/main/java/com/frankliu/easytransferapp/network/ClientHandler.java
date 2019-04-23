@@ -1,5 +1,7 @@
 package com.frankliu.easytransferapp.network;
 
+import android.util.Log;
+
 import com.frankliu.easytransferapp.entity.DeviceInfo;
 import com.frankliu.easytransferapp.entity.TaskSendFile;
 import com.frankliu.easytransferapp.protocol.BasicProtocol;
@@ -31,11 +33,13 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         BasicProtocol basicProtocol = ProtocolFactory.createFileSendRequest(file);
         ctx.writeAndFlush(basicProtocol);
+        Log.w(TAG, "send msg:" + basicProtocol.toString());
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         BasicProtocol basicProtocol = (BasicProtocol)msg;
+        Log.w(TAG, "receive msg:" + basicProtocol.toString());
         switch (basicProtocol.getMsgId()){
             case MsgId.FILE_SEND_RESPONSE:
                 if(basicProtocol.getErrorCode() == ErrorCode.SUCCESS){

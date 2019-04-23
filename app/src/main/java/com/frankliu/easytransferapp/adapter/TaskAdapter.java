@@ -31,6 +31,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         notifyDataSetChanged();
     }
 
+    public void addTask(Task task){
+        datas.add(task);
+        notifyDataSetChanged();
+    }
+
+    public void removeTask(Task task){
+        datas.remove(task);
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

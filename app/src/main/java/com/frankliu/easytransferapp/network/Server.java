@@ -41,6 +41,7 @@ public class Server {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture f = b.bind(port).sync();
             channel = f.channel();
+            f.channel().closeFuture().sync();
         }catch (InterruptedException e){
             e.printStackTrace();
         }finally {

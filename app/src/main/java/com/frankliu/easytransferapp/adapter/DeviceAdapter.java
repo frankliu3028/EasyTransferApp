@@ -29,6 +29,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         notifyDataSetChanged();
     }
 
+    public ArrayList<DeviceInfo> getData(){
+        return mData;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

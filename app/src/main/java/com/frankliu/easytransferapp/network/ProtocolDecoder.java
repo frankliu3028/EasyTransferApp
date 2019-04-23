@@ -15,7 +15,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if(in.readableBytes() > 4){
             int length = in.readInt();
-            if(in.readableBytes() < length){
+            if(in.readableBytes() < length - 4){
                 in.resetReaderIndex();
                 return;
             }

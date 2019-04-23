@@ -38,4 +38,13 @@ public class TaskSendFile extends Task {
     public void setFile(File file) {
         this.file = file;
     }
+
+    @Override
+    public String toString() {
+        return "TaskSendFile{" +
+                "ip='" + ip + '\'' +
+                ", port=" + port +
+                ", file=" + file.getName() +
+                '}';
+    }
 }

@@ -20,6 +20,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.frankliu.easytransferapp.R;
@@ -141,45 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, TaskService.class);
         bindService(intent,serviceConnection, BIND_AUTO_CREATE);
-        startMyService();
-    }
-
-    private void startMyService(){
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-                int port = Util.getAValidPort();
-                emitter.onNext(port);
-            }
-        }).subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Integer>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Integer port) {
-                        server = new Server(port, new ServerCallback() {
-                            @Override
-                            public void receiveFile(TaskReceiveFile taskReceiveFile) {
-                                taskBinder.addTask(taskReceiveFile);
-                            }
-                        });
-                        server.start();
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
+        Log.w(TAG, "bind");
     }
 
     @Override

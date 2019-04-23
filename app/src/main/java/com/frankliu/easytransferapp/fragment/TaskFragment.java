@@ -44,7 +44,10 @@ public class TaskFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             taskBinder = (TaskService.TaskBinder)service;
+            Log.w(TAG,"onServiceConnected");
             taskBinder.setTaskCallback(taskCallback);
+            taskDatas = taskBinder.getTasks();
+            taskAdapter.updateDatas(taskDatas);
         }
 
         @Override
@@ -58,12 +61,12 @@ public class TaskFragment extends Fragment {
     private TaskCallback taskCallback = new TaskCallback() {
         @Override
         public void taskReady(Task task) {
-
+            taskAdapter.addTask(task);
         }
 
         @Override
         public void taskFinished(Task task) {
-
+            taskAdapter.removeTask(task);
         }
     };
 
@@ -93,7 +96,6 @@ public class TaskFragment extends Fragment {
         rvTask.setLayoutManager(new LinearLayoutManager(getActivity()));
         rvTask.setItemAnimator(new DefaultItemAnimator());
         rvTask.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-        //taskDatas = taskBinder.getTasks();
         taskAdapter = new TaskAdapter(null);
         rvTask.setAdapter(taskAdapter);
         return rootView;

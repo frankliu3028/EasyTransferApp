@@ -49,4 +49,15 @@ public class Task {
     public void setPeerDeviceName(String peerDeviceName) {
         this.peerDeviceName = peerDeviceName;
     }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "taskId=" + taskId +
+                ", taskType=" + taskType +
+                ", progress=" + progress +
+                ", peerip='" + peerip + '\'' +
+                ", peerDeviceName='" + peerDeviceName + '\'' +
+                '}';
+    }
 }

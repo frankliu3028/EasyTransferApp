@@ -17,7 +17,10 @@ import com.frankliu.easytransferapp.network.FileReceiver;
 import com.frankliu.easytransferapp.network.FileReceiverCallback;
 import com.frankliu.easytransferapp.network.FileSender;
 import com.frankliu.easytransferapp.network.FileSenderCallback;
+import com.frankliu.easytransferapp.network.Server;
+import com.frankliu.easytransferapp.network.ServerCallback;
 import com.frankliu.easytransferapp.utils.Constant;
+import com.frankliu.easytransferapp.utils.Util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -40,9 +43,11 @@ public class TaskService extends Service {
     private Handler handler;
 
     private ArrayList<Task> tasks;
+    private Server server;
 
     public class TaskBinder extends Binder{
         public void addTask(Task task){
+            Log.w(TAG, "add task:" + task.toString());
             createTask(task);
         }
 
@@ -60,7 +65,7 @@ public class TaskService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind");
+        Log.w(TAG, "onBind");
         return taskBinder;
     }
 
@@ -72,6 +77,7 @@ public class TaskService extends Service {
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         handler = new Handler();
         tasks = new ArrayList<>();
+        startMyServer();
     }
 
     @Override
@@ -163,6 +169,21 @@ public class TaskService extends Service {
         });
         executorService.execute(fileReceiver);
     }
+    private void startMyServer(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int port = Util.getAValidPort();
+                server = new Server(port, new ServerCallback() {
+                    @Override
+                    public void receiveFile(TaskReceiveFile taskReceiveFile) {
+                        createTask(taskReceiveFile);
+                    }
+                });
+                server.start();
+            }
+        });
+    }
 
     private int getNewTaskId(){
         for(int i = 0; i < TASK_ID_POOL_SIZE; i++){
@@ -180,6 +201,13 @@ public class TaskService extends Service {
         }else{
             Log.e(TAG, "release task id error");
         }
+    }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(server != null){
+            server.close();
+        }
     }
 }

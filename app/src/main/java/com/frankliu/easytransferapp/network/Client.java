@@ -37,8 +37,9 @@ public class Client {
                             ch.pipeline().addLast(new ProtocolDecoder());
                         }
                     });
-            ChannelFuture f = b.connect().sync();
+            ChannelFuture f = b.connect(deviceInfo.getIp(), deviceInfo.getPort()).sync();
             channel = f.channel();
+            f.channel().closeFuture().sync();
         }catch (InterruptedException e){
             e.printStackTrace();
         }finally {
