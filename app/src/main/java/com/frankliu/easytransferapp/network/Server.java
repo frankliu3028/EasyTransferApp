@@ -1,5 +1,7 @@
 package com.frankliu.easytransferapp.network;
 
+import android.util.Log;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -12,6 +14,8 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
 public class Server {
+
+    private final String TAG = Server.class.getSimpleName();
     private final int port;
 
     private ServerCallback callback;
@@ -34,12 +38,13 @@ public class Server {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new ProtocolDecoder(), new ServerHandler(callback));
-                            ch.pipeline().addLast(new ProtocolEncoder());
+                            ch.pipeline().addLast(new ProtocolDecoder(),new ProtocolEncoder(), new ServerHandler(callback));
+                            //ch.pipeline().addLast(new ProtocolEncoder());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture f = b.bind(port).sync();
+            Log.w(TAG, "server listen on :" + port);
             channel = f.channel();
             f.channel().closeFuture().sync();
         }catch (InterruptedException e){

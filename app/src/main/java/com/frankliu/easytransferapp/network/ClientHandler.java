@@ -3,6 +3,7 @@ package com.frankliu.easytransferapp.network;
 import android.util.Log;
 
 import com.frankliu.easytransferapp.entity.DeviceInfo;
+import com.frankliu.easytransferapp.entity.Task;
 import com.frankliu.easytransferapp.entity.TaskSendFile;
 import com.frankliu.easytransferapp.protocol.BasicProtocol;
 import com.frankliu.easytransferapp.protocol.ErrorCode;
@@ -46,6 +47,9 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                     int port = Util.byteArrayToInt(basicProtocol.getDataArray());
                     TaskSendFile taskSendFile = new TaskSendFile(deviceInfo.getIp(), port, file);
                     callback.startSendFile(taskSendFile);
+                    ctx.close();
+                }else if(basicProtocol.getErrorCode() == ErrorCode.FAILURE){
+                    callback.receiveFileResponseError();
                 }
                 break;
                 default:

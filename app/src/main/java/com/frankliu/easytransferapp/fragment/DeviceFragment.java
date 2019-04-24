@@ -76,7 +76,7 @@ public class DeviceFragment extends Fragment {
     private SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
         public void onRefresh() {
-            Toast.makeText(getActivity(), "refreshing", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity(), "refreshing", Toast.LENGTH_SHORT).show();
             Observable.create(new ObservableOnSubscribe<ArrayList<DeviceInfo>>() {
                 @Override
                 public void subscribe(ObservableEmitter<ArrayList<DeviceInfo>> emitter) throws Exception {
@@ -136,6 +136,12 @@ public class DeviceFragment extends Fragment {
                         public void startSendFile(TaskSendFile taskSendFile) {
                             emitter.onNext(taskSendFile);
                         }
+
+                        @Override
+                        public void receiveFileResponseError() {
+                            Toast.makeText(getActivity(), "对方出错", Toast.LENGTH_SHORT).show();
+                            emitter.onComplete();
+                        }
                     });
                     client.start();
                 }
@@ -151,12 +157,15 @@ public class DeviceFragment extends Fragment {
                         public void onNext(TaskSendFile taskSendFile) {
                             Log.w(TAG, "onNext,taskSendFile:" + taskSendFile);
                             taskBinder.addTask(taskSendFile);
+                            getProgressDialog().cancel();
+                            Toast.makeText(getActivity(), "创建任务成功", Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onError(Throwable e) {
                             e.printStackTrace();
                             getProgressDialog().cancel();
+                            Toast.makeText(getActivity(), "创建任务失败", Toast.LENGTH_SHORT).show();
                         }
 
                         @Override

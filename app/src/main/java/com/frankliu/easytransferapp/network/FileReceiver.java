@@ -32,6 +32,7 @@ public class FileReceiver implements Runnable{
         Socket worker = null;
         try{
             int listenPort = Util.getAValidPort();
+            Log.w(TAG, "get port:" + listenPort);
             socket = new ServerSocket(listenPort);
             callback.ready(listenPort);
             worker = socket.accept();

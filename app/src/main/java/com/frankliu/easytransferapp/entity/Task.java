@@ -6,6 +6,7 @@ public class Task {
 
     private int taskId;
     protected int taskType;
+
     private int progress;
     private String peerip;
     private String peerDeviceName;

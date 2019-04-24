@@ -27,7 +27,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             case MsgId.FILE_SEND_REQUEST:
                 FileSendRequest fileSendRequest = Parser.parseFileSendRequest(basicProtocol.getDataArray());
                 TaskReceiveFile taskReceiveFile = new TaskReceiveFile(fileSendRequest.getFileName(), fileSendRequest.getFileLength());
-                callback.receiveFile(taskReceiveFile);
+                callback.receiveFile(taskReceiveFile, ctx);
                 break;
                 default:
                     Log.w(TAG, "unknow msg");

@@ -46,8 +46,8 @@ public class TaskFragment extends Fragment {
             taskBinder = (TaskService.TaskBinder)service;
             Log.w(TAG,"onServiceConnected");
             taskBinder.setTaskCallback(taskCallback);
-            taskDatas = taskBinder.getTasks();
-            taskAdapter.updateDatas(taskDatas);
+            //taskDatas = taskBinder.getTasks();
+            //taskAdapter.updateDatas(taskDatas);
         }
 
         @Override
@@ -73,7 +73,7 @@ public class TaskFragment extends Fragment {
     @BindView(R.id.rv_task)
     RecyclerView rvTask;
 
-    private ArrayList<Task> taskDatas;
+    private ArrayList<Task> taskDatas = new ArrayList<>();
     private TaskAdapter taskAdapter;
 
     @Override
@@ -96,7 +96,7 @@ public class TaskFragment extends Fragment {
         rvTask.setLayoutManager(new LinearLayoutManager(getActivity()));
         rvTask.setItemAnimator(new DefaultItemAnimator());
         rvTask.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-        taskAdapter = new TaskAdapter(null);
+        taskAdapter = new TaskAdapter(taskDatas);
         rvTask.setAdapter(taskAdapter);
         return rootView;
     }

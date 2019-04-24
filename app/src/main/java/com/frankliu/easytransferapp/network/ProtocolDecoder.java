@@ -1,5 +1,7 @@
 package com.frankliu.easytransferapp.network;
 
+import android.util.Log;
+
 import com.frankliu.easytransferapp.protocol.BasicProtocol;
 import com.frankliu.easytransferapp.protocol.UtilProtocol;
 
@@ -11,8 +13,10 @@ import java.util.List;
 
 public class ProtocolDecoder extends ByteToMessageDecoder {
 
+    private final String TAG = ProtocolDecoder.class.getSimpleName();
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        Log.w(TAG, "readableBytes: " + in.readableBytes());
         if(in.readableBytes() > 4){
             int length = in.readInt();
             if(in.readableBytes() < length - 4){

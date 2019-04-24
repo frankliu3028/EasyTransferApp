@@ -19,6 +19,10 @@ import com.frankliu.easytransferapp.network.FileSender;
 import com.frankliu.easytransferapp.network.FileSenderCallback;
 import com.frankliu.easytransferapp.network.Server;
 import com.frankliu.easytransferapp.network.ServerCallback;
+import com.frankliu.easytransferapp.protocol.BasicProtocol;
+import com.frankliu.easytransferapp.protocol.ErrorCode;
+import com.frankliu.easytransferapp.protocol.ProtocolFactory;
+import com.frankliu.easytransferapp.utils.Config;
 import com.frankliu.easytransferapp.utils.Constant;
 import com.frankliu.easytransferapp.utils.Util;
 
@@ -27,6 +31,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.logging.LogLevel;
 
 public class TaskService extends Service {
 
@@ -44,6 +51,7 @@ public class TaskService extends Service {
 
     private ArrayList<Task> tasks;
     private Server server;
+    private ChannelHandlerContext currCtx;
 
     public class TaskBinder extends Binder{
         public void addTask(Task task){
@@ -138,6 +146,9 @@ public class TaskService extends Service {
             @Override
             public void ready(int port) {
                 taskReceiveFile.setReceivePort(port);
+                BasicProtocol fileSendResponse = ProtocolFactory.createFileSendResponse(ErrorCode.SUCCESS, port);
+                currCtx.writeAndFlush(fileSendResponse);
+                Log.w(TAG, "send message FILE_SEND_RESPONSE:" + fileSendResponse.toString());
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -174,15 +185,17 @@ public class TaskService extends Service {
             @Override
             public void run() {
                 int port = Util.getAValidPort();
+                Config.FILE_TRANSFER_SERVICE_LISTEN_PORT = port;
                 server = new Server(port, new ServerCallback() {
                     @Override
-                    public void receiveFile(TaskReceiveFile taskReceiveFile) {
+                    public void receiveFile(TaskReceiveFile taskReceiveFile, ChannelHandlerContext ctx) {
                         createTask(taskReceiveFile);
+                        currCtx = ctx;
                     }
                 });
                 server.start();
             }
-        });
+        }).start();
     }
 
     private int getNewTaskId(){

@@ -7,6 +7,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 
 import java.io.File;
 
@@ -29,12 +31,13 @@ public class Client {
             Bootstrap b = new Bootstrap();
             b.group(worker)
                     .channel(NioSocketChannel.class)
+                    .handler(new LoggingHandler(LogLevel.INFO))
                     .option(ChannelOption.SO_KEEPALIVE, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new ProtocolEncoder(), new ClientHandler(deviceInfo, file, callback));
-                            ch.pipeline().addLast(new ProtocolDecoder());
+                            ch.pipeline().addLast(new ProtocolEncoder(),new ProtocolDecoder(), new ClientHandler(deviceInfo, file, callback));
+                            //ch.pipeline().addLast(new ProtocolDecoder());
                         }
                     });
             ChannelFuture f = b.connect(deviceInfo.getIp(), deviceInfo.getPort()).sync();
