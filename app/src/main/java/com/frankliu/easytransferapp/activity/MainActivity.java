@@ -6,37 +6,31 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 
-import com.frankliu.easytransferapp.entity.TaskReceiveFile;
 import com.frankliu.easytransferapp.fragment.DeviceFragment;
+import com.frankliu.easytransferapp.fragment.FileFragment;
 import com.frankliu.easytransferapp.fragment.TaskFragment;
-import com.frankliu.easytransferapp.network.Server;
-import com.frankliu.easytransferapp.network.ServerCallback;
 import com.frankliu.easytransferapp.service.TaskService;
 import com.frankliu.easytransferapp.utils.Config;
-import com.frankliu.easytransferapp.utils.Util;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import android.os.Handler;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.frankliu.easytransferapp.R;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
+
+import java.io.File;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -100,10 +94,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private Server server;
-
-    private Handler handler = new Handler();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,6 +114,9 @@ public class MainActivity extends AppCompatActivity {
                     case 1:
                         fragment = new TaskFragment();
                         break;
+                    case 2:
+                        fragment = new FileFragment();
+                        break;
                         default:
                             fragment = new Fragment();
                             break;
@@ -138,7 +131,15 @@ public class MainActivity extends AppCompatActivity {
         };
 
         viewPager.setAdapter(adapter);
-        Config.fileSaveDir = getFilesDir().getAbsolutePath();
+        Config.fileSaveDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/EasyTransfer";
+        File file = new File(Config.fileSaveDir);
+        if(!file.exists()){
+            if(!file.mkdir()){
+                Log.e(TAG, "create dirs error!");
+                Toast.makeText(this, "create dirs error", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Log.w(TAG, "fileSaveDir:" + Config.fileSaveDir);
 
         Intent intent = new Intent(this, TaskService.class);
         bindService(intent,serviceConnection, BIND_AUTO_CREATE);
@@ -149,6 +150,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbindService(serviceConnection);
-        server.close();
     }
 }
