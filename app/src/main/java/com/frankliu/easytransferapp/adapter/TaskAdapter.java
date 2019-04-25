@@ -39,12 +39,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
 
     public void addTask(Task task){
         Log.w(TAG, "add task:" + task.toString());
-        datas.add(task);
+        //datas.add(task);
         notifyDataSetChanged();
     }
 
     public void removeTask(Task task){
-        datas.remove(task);
+        //datas.remove(task);
         notifyDataSetChanged();
     }
 

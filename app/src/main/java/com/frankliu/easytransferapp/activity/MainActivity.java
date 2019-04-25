@@ -142,13 +142,14 @@ public class MainActivity extends AppCompatActivity {
         Log.w(TAG, "fileSaveDir:" + Config.fileSaveDir);
 
         Intent intent = new Intent(this, TaskService.class);
-        bindService(intent,serviceConnection, BIND_AUTO_CREATE);
-        Log.w(TAG, "bind");
+        startService(intent);
+        //bindService(intent,serviceConnection, BIND_AUTO_CREATE);
+        //Log.w(TAG, "bind");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(serviceConnection);
+        //unbindService(serviceConnection);
     }
 }

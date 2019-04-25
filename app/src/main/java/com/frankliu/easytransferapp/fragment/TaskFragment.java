@@ -46,8 +46,8 @@ public class TaskFragment extends Fragment {
             taskBinder = (TaskService.TaskBinder)service;
             Log.w(TAG,"onServiceConnected");
             taskBinder.setTaskCallback(taskCallback);
-            //taskDatas = taskBinder.getTasks();
-            //taskAdapter.updateDatas(taskDatas);
+            taskDatas = taskBinder.getTasks();
+            taskAdapter.updateDatas(taskDatas);
         }
 
         @Override
@@ -137,5 +137,6 @@ public class TaskFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         localBroadcastManager.unregisterReceiver(localBroadcastReceiver);
+        getActivity().unbindService(serviceConnection);
     }
 }

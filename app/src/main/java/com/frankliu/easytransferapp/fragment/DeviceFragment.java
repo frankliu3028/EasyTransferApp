@@ -71,7 +71,6 @@ public class DeviceFragment extends Fragment {
     TextView tvMyHostname;
 
     private DeviceAdapter deviceAdapter;
-    private SDServer sdServer;
 
     private SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
@@ -100,6 +99,7 @@ public class DeviceFragment extends Fragment {
                             deviceAdapter.updateData(deviceInfos);
                             swipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getActivity(), "刷新成功", Toast.LENGTH_SHORT).show();
+                            taskBinder.setDeviceInfosCache(deviceInfos);
                         }
 
                         @Override
@@ -196,6 +196,11 @@ public class DeviceFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             taskBinder = (TaskService.TaskBinder)service;
+            ArrayList<DeviceInfo> deviceInfos = taskBinder.getDeviceInfosCache();
+            if(deviceInfos != null){
+                deviceAdapter.updateData(deviceInfos);
+            }
+
         }
 
         @Override
@@ -209,24 +214,6 @@ public class DeviceFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Intent intent = new Intent(getActivity(), TaskService.class);
         getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        if(!isWifiConnected()){
-            Log.e(TAG, "wifi is not connected");
-            return;
-        }
-        String wifiIp = getWifiIpAddress();
-        sdServer = new SDServer(wifiIp, new SDServerCallback() {
-            @Override
-            public void serviceStartResults(int errorCode) {
-                if(ErrorCode.SD_START_ERROR_PORT_USED == errorCode){
-                    Log.e(TAG, "service discover listening port is used!");
-                }else if(ErrorCode.FAILURE == errorCode){
-                    Log.e(TAG, "start SD Service Failure");
-                }else{
-                    Log.d(TAG, "SD Service Start");
-                }
-            }
-        });
-        sdServer.start();
     }
 
     @Nullable
@@ -256,40 +243,7 @@ public class DeviceFragment extends Fragment {
         return progressDialog;
     }
 
-    private String getWifiIpAddress(){
-        Context context = getActivity().getApplicationContext();
-        if(context == null){
-            Log.e(TAG, "context is null");
-            return null;
-        }
-        WifiManager wm = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
-        if(isWifiConnected()){
-            int ipAsInt = wm.getConnectionInfo().getIpAddress();
-            if(ipAsInt == 0){
-                return null;
-            }else{
-                String ipStr = Util.intIp2string(ipAsInt);
-                return ipStr;
-            }
-        }
-        return null;
-    }
 
-    private boolean isWifiConnected(){
-        Context context = getActivity().getApplicationContext();
-        if(context == null){
-            Log.e(TAG, "context is null");
-            return false;
-        }
-        WifiManager wm = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
-        if(wm.getWifiState() == WifiManager.WIFI_STATE_ENABLED){
-            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            boolean isConnected = wifiInfo.isConnected();
-            return isConnected;
-        }
-        return false;
-    }
 
     private void selectFile(){
         DialogProperties properties = new DialogProperties();
@@ -331,8 +285,6 @@ public class DeviceFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(sdServer != null && sdServer.isAlive()){
-            sdServer.close();
-        }
+        getActivity().unbindService(serviceConnection);
     }
 }
