@@ -49,13 +49,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.navigation_home:
+                case R.id.navigation_scanner:
                     viewPager.setCurrentItem(0);
                     return true;
-                case R.id.navigation_dashboard:
+                case R.id.navigation_task:
                     viewPager.setCurrentItem(1);
                     return true;
-                case R.id.navigation_notifications:
+                case R.id.navigation_file:
                     viewPager.setCurrentItem(2);
                     return true;
             }
@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        toolbar.setTitle("EasyTransfer");
         setSupportActionBar(toolbar);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         viewPager.addOnPageChangeListener(onPageChangeListener);

@@ -45,6 +45,7 @@ public class SDServer extends Thread{
             socket = new MulticastSocket(Config.SERVICE_DISCOVER_LISTEN_PORT);
             InetAddress multicastInetAddress = InetAddress.getByName(Config.multicastAddress);
             socket.joinGroup(multicastInetAddress);
+            socket.setLoopbackMode(true);
             byte[] buffer = new byte[1024];
             DatagramPacket recPacket = new DatagramPacket(buffer, buffer.length);
             callback.serviceStartResults(ErrorCode.SUCCESS);
