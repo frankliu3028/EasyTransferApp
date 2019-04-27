@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -166,6 +168,18 @@ public class DeviceFragment extends Fragment {
                             e.printStackTrace();
                             getProgressDialog().cancel();
                             Toast.makeText(getActivity(), "创建任务失败", Toast.LENGTH_SHORT).show();
+                            AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+                                    .setTitle("提示")
+                                    .setMessage("连接失败，对方可能已离线")
+                                    .setPositiveButton("刷新", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            swipeRefreshLayout.setRefreshing(true);
+                                            onRefreshListener.onRefresh();
+                                        }
+                                    })
+                                    .create();
+                            alertDialog.show();
                         }
 
                         @Override
@@ -279,7 +293,7 @@ public class DeviceFragment extends Fragment {
     private void getMyHostname(){
         String deivceId = Build.MODEL;
         Log.d(TAG, "model:" + deivceId);
-        tvMyHostname.setText(deivceId);
+        tvMyHostname.setText("我的设备名称：" + deivceId);
     }
 
     @Override

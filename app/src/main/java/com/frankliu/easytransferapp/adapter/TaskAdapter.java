@@ -40,12 +40,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
     public void addTask(Task task){
         Log.w(TAG, "add task:" + task.toString());
         //datas.add(task);
-        notifyDataSetChanged();
+        notifyItemInserted(getTaskPostion(task));
     }
 
     public void removeTask(Task task){
         //datas.remove(task);
-        notifyDataSetChanged();
+        notifyItemRemoved(getTaskPostion(task));
+    }
+
+    private int getTaskPostion(Task task){
+        for(int i = 0; i < datas.size(); i++){
+            if(datas.get(i).getTaskId() == task.getTaskId()){
+                return i;
+            }
+        }
+        return -1;
     }
 
     @NonNull
@@ -63,9 +72,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         //Log.w(TAG, "onBindViewHolder:" + position + "    :" + task.toString());
         String taskTypeStr = "unknown";
         if(task.getTaskType() == Task.TASK_TYPE_SEND_FILE){
-            taskTypeStr = "SEND";
+            taskTypeStr = "发送";
         }else if(task.getTaskType() == Task.TASK_TYPE_RECEIVE_FILE){
-            taskTypeStr = "RECEIVE";
+            taskTypeStr = "接收";
         }
         String fileName = "";
         if(task.getTaskType() == Task.TASK_TYPE_SEND_FILE){
@@ -77,6 +86,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         holder.tvPeerip.setText(task.getPeerip());
         holder.tvFilename.setText(fileName);
         holder.progressBar.setProgress(task.getProgress());
+        holder.tvProgressText.setText(task.getProgress() + "%");
     }
 
     @Override
@@ -112,6 +122,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         TextView tvPeerip;
         @BindView(R.id.progressBar)
         ProgressBar progressBar;
+        @BindView(R.id.tv_progress_text)
+        TextView tvProgressText;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ButterKnife.bind(this,itemView);

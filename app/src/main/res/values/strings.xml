@@ -10,8 +10,8 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
-    <string name="title_device">Device</string>
-    <string name="title_task">Task</string>
-    <string name="title_file">File Download</string>
-    <string name="title_scanner">Scanner</string>
+    <string name="title_device">已发现设备</string>
+    <string name="title_task">进行中的任务</string>
+    <string name="title_file">已下载文件</string>
+    <string name="title_scanner">已发现设备</string>
 </resources>

@@ -2,11 +2,14 @@ package com.frankliu.easytransferapp.network;
 
 import android.util.Log;
 
+import com.frankliu.easytransferapp.entity.Task;
 import com.frankliu.easytransferapp.entity.TaskReceiveFile;
 import com.frankliu.easytransferapp.protocol.BasicProtocol;
 import com.frankliu.easytransferapp.protocol.FileSendRequest;
 import com.frankliu.easytransferapp.protocol.MsgId;
 import com.frankliu.easytransferapp.protocol.Parser;
+
+import java.net.InetSocketAddress;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,13 +30,14 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             case MsgId.FILE_SEND_REQUEST:
                 FileSendRequest fileSendRequest = Parser.parseFileSendRequest(basicProtocol.getDataArray());
                 TaskReceiveFile taskReceiveFile = new TaskReceiveFile(fileSendRequest.getFileName(), fileSendRequest.getFileLength());
+                InetSocketAddress peerAddr = (InetSocketAddress)ctx.channel().remoteAddress();
+                taskReceiveFile.setPeerip(peerAddr.getAddress().getHostAddress());
                 callback.receiveFile(taskReceiveFile, ctx);
                 break;
                 default:
                     Log.w(TAG, "unknow msg");
                     break;
         }
-
     }
 
     @Override

@@ -46,6 +46,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                 if(basicProtocol.getErrorCode() == ErrorCode.SUCCESS){
                     int port = Util.byteArrayToInt(basicProtocol.getDataArray());
                     TaskSendFile taskSendFile = new TaskSendFile(deviceInfo.getIp(), port, file);
+                    taskSendFile.setPeerip(deviceInfo.getIp());
                     callback.startSendFile(taskSendFile);
                     ctx.close();
                 }else if(basicProtocol.getErrorCode() == ErrorCode.FAILURE){
