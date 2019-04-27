@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">EasyTransferApp</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="app_name">EasyTransfer</string>
+    <string name="title_activity_main">EasyTransfer</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -14,4 +14,5 @@
     <string name="title_task">进行中的任务</string>
     <string name="title_file">已下载文件</string>
     <string name="title_scanner">已发现设备</string>
+    <string name="rational_1">需要获取外部存储权限</string>
 </resources>

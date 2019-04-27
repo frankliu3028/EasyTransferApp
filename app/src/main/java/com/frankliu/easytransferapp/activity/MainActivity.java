@@ -1,6 +1,8 @@
 package com.frankliu.easytransferapp.activity;
 
+import android.Manifest;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -12,6 +14,8 @@ import com.frankliu.easytransferapp.fragment.TaskFragment;
 import com.frankliu.easytransferapp.service.TaskService;
 import com.frankliu.easytransferapp.utils.Config;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -28,13 +32,17 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import java.io.File;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     private final String TAG = MainActivity.class.getSimpleName();
+
+    private final int EXTERNAL_STORAGE_REQUEST_CODE = 203;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -133,6 +141,16 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(adapter);
         Config.fileSaveDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/EasyTransfer";
+        requestExternalStorage();
+        createEasyTransferDir();
+
+        Intent intent = new Intent(this, TaskService.class);
+        startService(intent);
+        //bindService(intent,serviceConnection, BIND_AUTO_CREATE);
+        //Log.w(TAG, "bind");
+    }
+
+    private void createEasyTransferDir(){
         File file = new File(Config.fileSaveDir);
         if(!file.exists()){
             if(!file.mkdir()){
@@ -141,16 +159,60 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         Log.w(TAG, "fileSaveDir:" + Config.fileSaveDir);
-
-        Intent intent = new Intent(this, TaskService.class);
-        startService(intent);
-        //bindService(intent,serviceConnection, BIND_AUTO_CREATE);
-        //Log.w(TAG, "bind");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         //unbindService(serviceConnection);
+    }
+
+    private void requestExternalStorage(){
+        if(EasyPermissions.hasPermissions(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+
+        }else{
+            String[] perms = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            EasyPermissions.requestPermissions(this, "需要获取外部存储权限", EXTERNAL_STORAGE_REQUEST_CODE, perms);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        //Toast.makeText(this, "granted" + requestCode, Toast.LENGTH_SHORT).show();
+        if(requestCode == EXTERNAL_STORAGE_REQUEST_CODE){
+            createEasyTransferDir();
+        }
+
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+        //Toast.makeText(this, "denied" + requestCode, Toast.LENGTH_SHORT).show();
+        if(requestCode == EXTERNAL_STORAGE_REQUEST_CODE){
+            AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setTitle("警告")
+                    .setMessage("外部存储权限未取得，即将退出应用")
+                    .setPositiveButton("再试一次", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            requestExternalStorage();
+                        }
+                    })
+                    .setNegativeButton("退出", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+            alertDialog.setCancelable(false);
+            alertDialog.show();
+        }
     }
 }
