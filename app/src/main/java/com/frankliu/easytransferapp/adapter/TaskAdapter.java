@@ -14,6 +14,7 @@ import com.frankliu.easytransferapp.R;
 import com.frankliu.easytransferapp.entity.Task;
 import com.frankliu.easytransferapp.entity.TaskReceiveFile;
 import com.frankliu.easytransferapp.entity.TaskSendFile;
+import com.frankliu.easytransferapp.utils.Util;
 
 import java.util.ArrayList;
 
@@ -71,6 +72,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         Task task = datas.get(position);
         //Log.w(TAG, "onBindViewHolder:" + position + "    :" + task.toString());
         String taskTypeStr = "unknown";
+        double fileSize = 0L;
         if(task.getTaskType() == Task.TASK_TYPE_SEND_FILE){
             taskTypeStr = "发送";
         }else if(task.getTaskType() == Task.TASK_TYPE_RECEIVE_FILE){
@@ -79,14 +81,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         String fileName = "";
         if(task.getTaskType() == Task.TASK_TYPE_SEND_FILE){
             fileName = ((TaskSendFile)task).getFile().getName();
+            double fileLength = ((TaskSendFile) task).getFile().length();
+            fileSize = Util.formatDouble(fileLength/(1024*1024));
         }else if(task.getTaskType() == Task.TASK_TYPE_RECEIVE_FILE){
             fileName = ((TaskReceiveFile)task).getFileName();
+            double fileLength = ((TaskReceiveFile) task).getFileSize();
+            fileSize = Util.formatDouble(fileLength/(1024*1024));
         }
         holder.tvTaskType.setText(taskTypeStr);
         holder.tvPeerip.setText(task.getPeerip());
         holder.tvFilename.setText(fileName);
         holder.progressBar.setProgress(task.getProgress());
         holder.tvProgressText.setText(task.getProgress() + "%");
+        holder.tvFileSize.setText(fileSize + "MB");
     }
 
     @Override
@@ -124,6 +131,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         ProgressBar progressBar;
         @BindView(R.id.tv_progress_text)
         TextView tvProgressText;
+        @BindView(R.id.tv_file_size)
+        TextView tvFileSize;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ButterKnife.bind(this,itemView);

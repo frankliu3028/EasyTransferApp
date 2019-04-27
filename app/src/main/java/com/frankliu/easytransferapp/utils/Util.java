@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -148,6 +149,12 @@ public class Util {
 			}
 		}
 		return -1;
+	}
+
+	public static double formatDouble(double price) {
+		BigDecimal b3 = new BigDecimal(price);
+		double f3 = b3.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+		return f3;
 	}
 
 	public static String intIp2string(int ip) {
